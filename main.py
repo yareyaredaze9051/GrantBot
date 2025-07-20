@@ -11,31 +11,62 @@ logger = logging.getLogger(__name__)
 
 # База данных олимпиад (можно заменить на подключение к реальной БД)
 olympiads_db = {
-    "Всерос": {
-        "level": 1,
-        "benefits": "Зачисление без вступительных испытаний (БВИ) на соответствующие направления",
-        "subjects": ["Математика", "Физика", "Химия", "Биология", "Информатика", "Литература", "История",
-                     "Обществознание"]
+    "Москва": {
+        "Всерос": {
+            "level": 1,
+            "benefits": "Зачисление без вступительных испытаний (БВИ) на соответствующие направления",
+            "subjects": ["Математика", "Физика", "Химия", "Биология", "Информатика", "Литература", "История",
+                         "Обществознание"]
+        },
+        "Олимпиада СПбГУ": {
+            "level": 2,
+            "benefits": "100 баллов по профильному предмету или БВИ в зависимости от уровня и степени диплома",
+            "subjects": ["Математика", "Физика", "Химия", "Биология", "Экономика", "Право"]
+        },
+        "Высшая проба": {
+            "level": 1,
+            "benefits": "БВИ или 100 баллов по профильному предмету",
+            "subjects": ["Математика", "Экономика", "Право", "Философия", "Социология"]
+        },
+        "Физтех": {
+            "level": 2,
+            "benefits": "Дополнительные баллы или БВИ в МФТИ",
+            "subjects": ["Математика", "Физика"]
+        },
+        "Ломоносов": {
+            "level": 1,
+            "benefits": "БВИ или 100 баллов по профильному предмету",
+            "subjects": ["Математика", "Физика", "Химия", "Биология", "Геология", "Психология"]
+    }},
+    "Нижний Новгород": {
+        "Национальная Технологическая Олимпиада Профиль Технологии Дополненной Реальности": {
+            "level": 3,
+            "benefits": "БВИ или 100 баллов по профильному предмету в некоторые ВУЗы",
+            "subjects": ["Информатика"]
+
+        },
+        "Будущие исследователи - Будущее науки": {
+            "level": 2,
+            "benefits": "БВИ или 100 баллов по профильному предмету в некоторые ВУЗы",
+            "subjects": ["Физика", "Химия", "История"]
+    }
     },
-    "Олимпиада СПбГУ": {
-        "level": 2,
-        "benefits": "100 баллов по профильному предмету или БВИ в зависимости от уровня и степени диплома",
-        "subjects": ["Математика", "Физика", "Химия", "Биология", "Экономика", "Право"]
+    "Санкт-Петербург": {
+        "Открытая Олимпиада Школьников по информатике ИТМО": {
+            "level": 1,
+            "benefits": "Зачисление без вступительных испытаний (БВИ) на соответствующие направления",
+            "subjects": ["Информатика"]
     },
-    "Высшая проба": {
-        "level": 1,
-        "benefits": "БВИ или 100 баллов по профильному предмету",
-        "subjects": ["Математика", "Экономика", "Право", "Философия", "Социология"]
+        "Олимпиада школьников СПбГУ":{
+            "level": 1,
+            "benefits": "Зачисление без вступительных испытаний (БВИ) на соответствующие направления",
+            "subjects": ["Информатика", "Математика", "Физика"]
     },
-    "Физтех": {
-        "level": 2,
-        "benefits": "Дополнительные баллы или БВИ в МФТИ",
-        "subjects": ["Математика", "Физика"]
-    },
-    "Ломоносов": {
-        "level": 1,
-        "benefits": "БВИ или 100 баллов по профильному предмету",
-        "subjects": ["Математика", "Физика", "Химия", "Биология", "Геология", "Психология"]
+        "Отраслевая олимпиада школьников 'Газпром'":{
+            "level": 3,
+            "benefits": "БВИ или 100 баллов по профильному предмету в некоторые ВУЗы",
+            "subjects": ["Математика", "Физика", "Химия", "Инженерное дело"]
+        }
     }
 }
 
@@ -53,14 +84,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # Команда /olympiads - список олимпиад
 async def olympiads(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not context.args:
+        await update.message.reply_text(
+            "Пожалуйста, укажите название города после команды, например: /olympiads Москва")
+        return
     keyboard = []
-
+    city = " ".join(context.args)
     # Создаем кнопки для каждой олимпиады
-    for olympiad in olympiads_db:
+    for olympiad in olympiads_db[city]:
         keyboard.append([InlineKeyboardButton(olympiad, callback_data=f"olympiad_{olympiad}")])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
-
+    print(reply_markup)
     await update.message.reply_text(
         "Список олимпиад, дающих льготы при поступлении:",
         reply_markup=reply_markup
@@ -73,11 +108,12 @@ async def benefits(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text(
             "Пожалуйста, укажите название олимпиады после команды, например: /benefits Всерос")
         return
-    olympiad_name = " ".join(context.args)
     found = False
-    for name, data in olympiads_db.items():
-        if olympiad_name.lower() in name.lower():
-            await send_olympiad_info(update, name, data)
+    olympiad_name = " ".join(context.args)
+    for city in olympiads_db.keys():
+        if olympiad_name in olympiads_db[city].keys():
+            data = olympiads_db[city][olympiad_name]
+            await send_olympiad_info(update, olympiad_name, data)
             found = True
             break
 
