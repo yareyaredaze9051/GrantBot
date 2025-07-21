@@ -39,7 +39,7 @@ olympiads_db = {
             "subjects": ["Математика", "Физика", "Химия", "Биология", "Геология", "Психология"]
     }},
     "Нижний Новгород": {
-        "Национальная Технологическая Олимпиада Профиль Технологии Дополненной Реальности": {
+        "НТО Профиль Доп Реальность": {
             "level": 3,
             "benefits": "БВИ или 100 баллов по профильному предмету в некоторые ВУЗы",
             "subjects": ["Информатика"]
@@ -52,7 +52,7 @@ olympiads_db = {
     }
     },
     "Санкт-Петербург": {
-        "Открытая Олимпиада Школьников по информатике ИТМО": {
+        "Олимпиада ИТМО по информатике": {
             "level": 1,
             "benefits": "Зачисление без вступительных испытаний (БВИ) на соответствующие направления",
             "subjects": ["Информатика"]
@@ -62,14 +62,8 @@ olympiads_db = {
             "benefits": "Зачисление без вступительных испытаний (БВИ) на соответствующие направления",
             "subjects": ["Информатика", "Математика", "Физика"]
     },
-        "Отраслевая олимпиада школьников 'Газпром'":{
-            "level": 3,
-            "benefits": "БВИ или 100 баллов по профильному предмету в некоторые ВУЗы",
-            "subjects": ["Математика", "Физика", "Химия", "Инженерное дело"]
-        }
     }
 }
-
 
 # Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -93,9 +87,8 @@ async def olympiads(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Создаем кнопки для каждой олимпиады
     for olympiad in olympiads_db[city]:
         keyboard.append([InlineKeyboardButton(olympiad, callback_data=f"olympiad_{olympiad}")])
-
+    print(keyboard)
     reply_markup = InlineKeyboardMarkup(keyboard)
-    print(reply_markup)
     await update.message.reply_text(
         "Список олимпиад, дающих льготы при поступлении:",
         reply_markup=reply_markup
@@ -124,14 +117,20 @@ async def benefits(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 # Обработчик нажатий на кнопки
 async def button(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+
     query = update.callback_query
     await query.answer()
 
+
     if query.data.startswith("olympiad_"):
         olympiad_name = query.data[9:]
-        if olympiad_name in olympiads_db:
-            await send_olympiad_info_query(query, olympiad_name, olympiads_db[olympiad_name])
-        else:
+        found = False
+        for city in olympiads_db.keys():
+            if olympiad_name in olympiads_db[city]:
+                await send_olympiad_info_query(query, olympiad_name, olympiads_db[city][olympiad_name])
+                found = True
+                break
+        if not found:
             await query.edit_message_text("Информация об этой олимпиаде временно недоступна")
 
 
@@ -180,7 +179,6 @@ def main() -> None:
 
     # Запускаем бота
     application.run_polling()
-
 
 if __name__ == "__main__":
     main()
