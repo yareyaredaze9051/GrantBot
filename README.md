@@ -10,5 +10,3 @@
 При разработке ТГ-бота использовалась ИИ модель - DeepSeek
 
 Логику сценария можно найти в прещентации
-
-[Глеб БОТ.pdf](https://github.com/user-attachments/files/21351877/default.pdf)
